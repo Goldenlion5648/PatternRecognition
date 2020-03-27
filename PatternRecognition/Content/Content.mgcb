@@ -44,6 +44,13 @@
 /processorParam:TextureFormat=Compressed
 /build:testFont.spritefont
 
+#begin titleAndEndFont.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:titleAndEndFont.spritefont
+
 #begin whiteCircle.png
 /importer:TextureImporter
 /processor:TextureProcessor
