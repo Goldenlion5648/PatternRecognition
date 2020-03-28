@@ -24,6 +24,7 @@ namespace PatternRecognition
         public bool isUserHighlighted { get; set; }
 
         public int totalFrames { get; set; }
+        public int startingY { get; set; }
         public int currentFrame { get; set; }
         public Texture2D[] texturesArray { get; set; }
 
@@ -39,6 +40,8 @@ namespace PatternRecognition
             isMoving = false;
             lengthX = characterRec.Right - characterRec.Left;
             lengthY = characterRec.Bottom - characterRec.Top;
+
+            startingY = rec.Y;
         }
 
         public Character(Texture2D tex, Rectangle rec, Texture2D[] newTextures)
@@ -195,6 +198,12 @@ namespace PatternRecognition
         public int getRecX()
         {
             return characterRec.X;
+        }
+
+        public void stretchUp(int amount)
+        {
+            characterRec.Y -= amount;
+            characterRec.Height += amount;
         }
 
         public void changeImage(Texture2D newTex)

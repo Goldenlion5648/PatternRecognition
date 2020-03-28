@@ -36,6 +36,7 @@ namespace PatternRecognition
         bool isInvertingPattern = false;
         bool isMirroringLeftRight = false;
 
+
         int patternChoice = 1;
 
         int screenWidth = 720;
@@ -66,6 +67,10 @@ namespace PatternRecognition
         }
 
         int[] timesUsed = new int[(Enum.GetNames(typeof(tools)).Length)];
+        bool shouldDrawTimesUsed = true;
+        Character[] timesUsedGraph = new Character[(Enum.GetNames(typeof(tools)).Length)];
+        Color[] graphColors = new Color[] { Color.LimeGreen, Color.Red, Color.Purple, Color.Gold };
+
 
         tools selectedTool = tools.paintCan;
 
@@ -80,7 +85,7 @@ namespace PatternRecognition
             titleScreen, gameplay, lose,
         }
 
-        gameState state = gameState.lose;
+        gameState state = gameState.titleScreen;
 
         public Game1()
         {
@@ -117,6 +122,7 @@ namespace PatternRecognition
             testFont = Content.Load<SpriteFont>("testFont");
             titleFont = Content.Load<SpriteFont>("titleAndEndFont");
 
+
             board = new Character[boardYDim, boardXDim];
             playButton = new Character(Content.Load<Texture2D>("buttonOutline"),
                         new Rectangle(screenWidth / 2 - 100, 250,
@@ -130,6 +136,15 @@ namespace PatternRecognition
                         new Rectangle(x * (screenWidth / boardXDim), y * (screenHeight / boardYDim),
                         (screenWidth / boardXDim), (screenHeight / boardYDim)));
                 }
+            }
+
+                int offset = 200;
+            for (int i = 0; i < (Enum.GetNames(typeof(tools)).Length); i++)
+            {
+                timesUsedGraph[i] = new Character(Content.Load<Texture2D>("blankSquare"),
+                        new Rectangle(screenWidth / 2 - offset, screenHeight / 2 + 35,
+                        100, 10));
+                offset -= 100;
             }
 
         }
@@ -377,37 +392,48 @@ namespace PatternRecognition
             clearPattern();
             switch (patternChoice)
             {
+                //case 1:
+                //    for (int y = 0; y < boardYDim; y++)
+                //    {
+                //        for (int x = 0; x < boardXDim; x++)
+                //        {
+                //            if (x % 2 == 0 && y % 2 == 0)
+                //                board[y, x].isHighlighted = !board[y, x].isHighlighted;
+                //        }
+                //    }
+                //    break;
+                //case 2:
+                //    for (int y = 0; y < boardYDim; y++)
+                //    {
+                //        for (int x = 0; x < boardXDim; x++)
+                //        {
+                //            if ((x + y) % 2 == 0)
+                //                board[y, x].isHighlighted = !board[y, x].isHighlighted;
+                //        }
+                //    }
+                //    break;
+                //case 3:
+                //    for (int y = 0; y < boardYDim; y++)
+                //    {
+                //        for (int x = 0; x < boardXDim; x++)
+                //        {
+                //            if (x % 2 == 0 || y % 2 == 0)
+                //                board[y, x].isHighlighted = !board[y, x].isHighlighted;
+                //        }
+                //    }
+                //    break;
+                //case 5:
+                //    amountToShift = rand.Next(1, (int)Math.Ceiling((double)boardXDim / 2));
+                //    for (int y = 0; y < boardYDim; y++)
+                //    {
+                //        for (int x = 0; x < boardXDim; x++)
+                //        {
+                //            if (x >= amountToShift && x <= boardXDim - 1 - amountToShift)
+                //                board[y, x].isHighlighted = !board[y, x].isHighlighted;
+                //        }
+                //    }
+                //    break;
                 case 1:
-                    for (int y = 0; y < boardYDim; y++)
-                    {
-                        for (int x = 0; x < boardXDim; x++)
-                        {
-                            if (x % 2 == 0 && y % 2 == 0)
-                                board[y, x].isHighlighted = !board[y, x].isHighlighted;
-                        }
-                    }
-                    break;
-                case 2:
-                    for (int y = 0; y < boardYDim; y++)
-                    {
-                        for (int x = 0; x < boardXDim; x++)
-                        {
-                            if ((x + y) % 2 == 0)
-                                board[y, x].isHighlighted = !board[y, x].isHighlighted;
-                        }
-                    }
-                    break;
-                case 3:
-                    for (int y = 0; y < boardYDim; y++)
-                    {
-                        for (int x = 0; x < boardXDim; x++)
-                        {
-                            if (x % 2 == 0 || y % 2 == 0)
-                                board[y, x].isHighlighted = !board[y, x].isHighlighted;
-                        }
-                    }
-                    break;
-                case 4:
                     for (int y = 0; y < boardYDim; y++)
                     {
                         for (int x = 0; x < boardXDim; x++)
@@ -417,18 +443,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 5:
-                    amountToShift = rand.Next(1, (int)Math.Ceiling((double)boardXDim / 2));
-                    for (int y = 0; y < boardYDim; y++)
-                    {
-                        for (int x = 0; x < boardXDim; x++)
-                        {
-                            if (x >= amountToShift && x <= boardXDim - 1 - amountToShift)
-                                board[y, x].isHighlighted = !board[y, x].isHighlighted;
-                        }
-                    }
-                    break;
-                case 6:
+                case 2:
                     for (int y = 0; y < boardYDim; y++)
                     {
                         for (int x = 0; x < boardXDim; x++)
@@ -438,7 +453,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 7:
+                case 3:
                     for (int y = 0; y < boardYDim; y++)
                     {
                         for (int x = 0; x < boardXDim; x++)
@@ -448,7 +463,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 8:
+                case 4:
                     for (int y = 0; y < boardYDim; y++)
                     {
                         for (int x = 0; x < boardXDim; x++)
@@ -458,7 +473,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 9:
+                case 5:
                     for (int y = 0; y < boardYDim; y++)
                     {
                         for (int x = 0; x < boardXDim; x++)
@@ -468,7 +483,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 10:
+                case 6:
                     amountToShift = rand.Next(0, 2);
                     for (int y = 0; y < boardYDim; y++)
                     {
@@ -479,7 +494,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 11:
+                case 7:
                     amountToShift = rand.Next(0, 3);
                     for (int y = 0; y < boardYDim; y++)
                     {
@@ -490,7 +505,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 12:
+                case 8:
                     //amountToShift = rand.Next(3, 5);
                     for (int y = 0; y < boardYDim; y++)
                     {
@@ -501,7 +516,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 13:
+                case 9:
                     amountToShift = rand.Next(1, boardXDim / 2);
                     for (int y = 0; y < boardYDim; y++)
                     {
@@ -513,7 +528,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 14:
+                case 10:
                     amountToShift = rand.Next(1, (int)Math.Ceiling((double)boardXDim / 2));
                     for (int y = 0; y < boardYDim; y++)
                     {
@@ -527,7 +542,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 15:
+                case 11:
                     for (int y = 0; y < boardYDim; y++)
                     {
                         for (int x = 0; x < boardXDim; x++)
@@ -537,7 +552,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 16:
+                case 12:
                     for (int y = 0; y < boardYDim; y++)
                     {
                         for (int x = 0; x < boardXDim; x++)
@@ -547,7 +562,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 17:
+                case 13:
                     int xPos = rand.Next(1, boardXDim - 1);
                     int yPos = 0;
                     int xAddAmount = 1;
@@ -568,7 +583,7 @@ namespace PatternRecognition
 
                     }
                     break;
-                case 18:
+                case 14:
                     amountToShift = rand.Next(2, 5);
                     for (int y = 0; y < boardYDim; y++)
                     {
@@ -579,7 +594,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 19:
+                case 15:
                     amountToShift = rand.Next(0, boardXDim);
                     for (int y = 0; y < boardYDim; y++)
                     {
@@ -590,7 +605,7 @@ namespace PatternRecognition
                         }
                     }
                     break;
-                case 20:
+                case 16:
                     amountToShift = rand.Next(2, 6);
                     int startX = rand.Next(0, 1);
                     for (int x = startX; x < boardXDim; x += 1)
@@ -599,7 +614,7 @@ namespace PatternRecognition
 
                     }
                     break;
-                case 21:
+                case 17:
                     amountToShift = rand.Next(2, 5);
                     startX = rand.Next(0, 1);
                     yPos = 0;
@@ -740,7 +755,7 @@ namespace PatternRecognition
                     {
                         if (board[y, x].getRec().Contains(mousePos))
                         {
-                            if (selectedTool == tools.paintCan)
+                            if (selectedTool == tools.paintCan && timesUsed[(int)selectedTool] < 4)
                             {
                                 for (int y2 = Math.Max(y - 1, 0); y2 < Math.Min(y + 2, boardYDim); y2++)
                                 {
@@ -754,16 +769,19 @@ namespace PatternRecognition
                                         {
                                             board[y2, x2].isUserHighlighted = true;
                                             numChanged += 1;
+                                            
+
                                         }
                                     }
                                 }
+
                                 //pointsToSpend -= (int)(6 * ((double)numChanged / 9));
                                 pointsToSpend -= Math.Min(numChanged, 7);
                                 pointsToSpend += (int)Math.Ceiling((double)revealedCount / 2);
                                 y = boardYDim;
                                 x = boardXDim;
                             }
-                            else if (selectedTool == tools.plus)
+                            else if (selectedTool == tools.plus && timesUsed[(int)selectedTool] < 4)
                             {
                                 for (int y2 = Math.Max(y - 1, 0); y2 < Math.Min(y + 2, boardYDim); y2++)
                                 {
@@ -775,6 +793,8 @@ namespace PatternRecognition
                                     {
                                         board[y2, x].isUserHighlighted = true;
                                         numChanged += 1;
+                                        
+
                                     }
                                 }
 
@@ -788,6 +808,8 @@ namespace PatternRecognition
                                     {
                                         board[y, x2].isUserHighlighted = true;
                                         numChanged += 1;
+                                        
+
                                     }
 
                                 }
@@ -799,7 +821,7 @@ namespace PatternRecognition
                                 y = boardYDim;
                                 x = boardXDim;
                             }
-                            else if (selectedTool == tools.xTool)
+                            else if (selectedTool == tools.xTool && timesUsed[(int)selectedTool] < 4)
                             {
 
                                 int firstPoint = ((y - 1) + (x - 1)) % 2;
@@ -817,6 +839,8 @@ namespace PatternRecognition
                                             {
                                                 board[y2, x2].isUserHighlighted = true;
                                                 numChanged += 1;
+                                                
+
                                             }
                                         }
                                     }
@@ -829,7 +853,7 @@ namespace PatternRecognition
                                 y = boardYDim;
                                 x = boardXDim;
                             }
-                            else if (selectedTool == tools.single)
+                            else if (selectedTool == tools.single && timesUsed[(int)selectedTool] < 6)
                             {
                                 if (board[y, x].isHighlighted && board[y, x].isUserHighlighted == false)
                                 {
@@ -839,6 +863,8 @@ namespace PatternRecognition
                                 {
                                     board[y, x].isUserHighlighted = true;
                                     numChanged += 1;
+                                    
+
                                 }
                                 //pointsToSpend -= 1 * numChanged;
                                 //pointsToSpend += revealedCount;
@@ -848,12 +874,17 @@ namespace PatternRecognition
                                 x = boardXDim;
                             }
 
+
+
                             //board[y, x].isHighlighted = !board[y, x].isHighlighted;
                         }
 
                     }
                 }
             }
+
+            if(numChanged != 0)
+                timesUsed[(int)selectedTool] += 1;
             numChanged = 0;
             revealedCount = 0;
 
@@ -864,7 +895,7 @@ namespace PatternRecognition
                 {
                     for (int x = 0; x < boardXDim; x++)
                     {
-                        if (board[y, x].getRec().Contains(mousePos))
+                        if (board[y, x].getRec().Contains(mousePos) && timesUsed[(int)selectedTool] < 6)
                         {
                             if (board[y, x].isHighlighted && board[y, x].isUserHighlighted == false)
                             {
@@ -874,6 +905,7 @@ namespace PatternRecognition
                             {
                                 board[y, x].isUserHighlighted = true;
                                 numChanged += 1;
+                                
                             }
 
                             pointsToSpend -= numChanged;
@@ -883,6 +915,16 @@ namespace PatternRecognition
                     }
                 }
             }
+            if (numChanged != 0)
+                timesUsed[(int)selectedTool] += 1;
+
+
+            for (int i = 0; i < timesUsed.Length; i++)
+            {
+                timesUsedGraph[i].setRecY(timesUsedGraph[i].startingY - timesUsed[i] * 10);
+                timesUsedGraph[i].setRecHeight(timesUsedGraph[i].startingY - timesUsedGraph[i].getRecY() + 10);
+            }
+
 
 
             if (pointsToSpend <= 0)
@@ -895,6 +937,15 @@ namespace PatternRecognition
                 && kb.IsKeyDown(Keys.P) && oldkb.IsKeyUp(Keys.P))
             {
                 isDebugEnabled = !isDebugEnabled;
+            }
+
+            if (kb.IsKeyDown(Keys.Tab))
+            {
+                shouldDrawTimesUsed = true;
+            }
+            else
+            {
+                shouldDrawTimesUsed = false;
             }
 
             if (kb.IsKeyDown(Keys.W) && oldkb.IsKeyUp(Keys.W))
@@ -1121,6 +1172,19 @@ namespace PatternRecognition
                 spriteBatch.DrawString(testFont, patternChoice.ToString(),
                             new Vector2(10, 10), Color.Red);
             }
+
+            if(shouldDrawTimesUsed)
+            {
+                for (int i = 0; i < (Enum.GetNames(typeof(tools)).Length); i++)
+                {
+                    timesUsedGraph[i].drawCharacter(spriteBatch, graphColors[i]);
+                    spriteBatch.DrawString(testFont, ((tools)(i)).ToString(),
+                        new Vector2(timesUsedGraph[i].getRec().Center.X, timesUsedGraph[i].getRec().Bottom + 10)
+                        - testFont.MeasureString(((tools)(i)).ToString()) / 2, Color.CadetBlue);
+                        //0, new Vector2(screenWidth / 2, 10), 1, SpriteEffects.None, 1);
+                }
+            }
+
             spriteBatch.DrawString(testFont, "Points to\nSpend: " + pointsToSpend.ToString(),
                         new Vector2(0, 15), Color.Red);
             spriteBatch.DrawString(testFont, "  Tool:\n" + selectedTool.ToString(),
