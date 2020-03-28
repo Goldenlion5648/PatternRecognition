@@ -46,8 +46,16 @@ namespace PatternRecognition
         int revealedCount = 0;
         int numChanged = 0;
 
-        int pointsToSpend = 30;
-        int startingPointsToSpend = 30;
+        int pointsToSpend = 33;
+        int totalTreasureTiles = 0;
+
+        int startingPointsToSpend = 33;
+
+        int foundCount = 0;
+
+        int correctFillCooldown = 0;
+
+        bool isComplete = false;
 
         bool isDebugEnabled = false;
         bool startButtonSelected = false;
@@ -56,6 +64,8 @@ namespace PatternRecognition
         {
             paintCan = 0, plus, xTool, single
         }
+
+        int[] timesUsed = new int[(Enum.GetNames(typeof(tools)).Length)];
 
         tools selectedTool = tools.paintCan;
 
@@ -70,7 +80,7 @@ namespace PatternRecognition
             titleScreen, gameplay, lose,
         }
 
-        gameState state = gameState.titleScreen;
+        gameState state = gameState.lose;
 
         public Game1()
         {
@@ -145,6 +155,11 @@ namespace PatternRecognition
             mousePos.X = mouse.X;
             mousePos.Y = mouse.Y;
 
+            if(this.IsActive == false)
+            {
+                return;
+            }
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
@@ -169,12 +184,18 @@ namespace PatternRecognition
 
         public void titleScreen()
         {
+            playButton.setRec(new Rectangle(screenWidth / 2 - 100, 250,
+                        200, 90));
+
             if ((playButton.getRec()).Contains((mousePos)) || kb.IsKeyDown(Keys.Enter))
             {
                 startButtonSelected = true;
 
-                if (mouse.LeftButton == ButtonState.Pressed || kb.IsKeyDown(Keys.Enter))
+                if ((mouse.LeftButton == ButtonState.Pressed && oldmouse.LeftButton == ButtonState.Released)
+                    || kb.IsKeyDown(Keys.Enter))
                 {
+                    hasDoneOneTimeCode = false;
+                    foundCount = 0;
                     state = gameState.gameplay;
                 }
 
@@ -197,28 +218,35 @@ namespace PatternRecognition
 
         public void generateLevel()
         {
+            startingPointsToSpend -= 3;
+            if(startingPointsToSpend < 10)
+            {
+                startingPointsToSpend = 10;
+            }
+            pointsToSpend = startingPointsToSpend;
+
             shouldCalcRedraw = true;
             patternChoice = rand.Next(1, 22);
             makePatterns();
 
-            int rotateChanceInX = rand.Next(1, 4);
-            if (rotateChanceInX == 1)
-            {
+            //int rotateChanceInX = rand.Next(1, 4);
+            //if (rotateChanceInX == 1)
+            //{
 
-                int rotateCount = rand.Next(1, 4);
+                int rotateCount = rand.Next(0, 4);
                 for (int i = 0; i < rotateCount; i++)
                 {
                     rotateClockwise();
                 }
-            }
+            //}
 
-            int invertChanceInX = rand.Next(1, 6);
-            if(invertChanceInX == 1)
-            {
-                invertPattern();
-            }
+            //int invertChanceInX = rand.Next(1, 5);
+            //if(invertChanceInX == 1)
+            //{
+            //    invertPattern();
+            //}
 
-            int otherChance = rand.Next(1, 9);
+            int otherChance = rand.Next(2, 8);
             if(otherChance == 5)
             {
                 mirrorLeftAndRight();
@@ -618,13 +646,49 @@ namespace PatternRecognition
 
         public void lose()
         {
+            playButton.setRecHeight(160);
 
+            if ((playButton.getRec()).Contains((mousePos)) || kb.IsKeyDown(Keys.Enter))
+            {
+                startButtonSelected = true;
+
+                if (mouse.LeftButton == ButtonState.Pressed || kb.IsKeyDown(Keys.Enter))
+                {
+                    state = gameState.titleScreen;
+                }
+
+            }
+            else
+            {
+                startButtonSelected = false;
+            }
+        }
+
+        public void checkProgress()
+        {
+            if((double)foundCount / totalTreasureTiles >= .7)
+            {
+                isComplete = true;
+                if(correctFillCooldown == 0)
+                {
+                    correctFillCooldown += 100;
+                }
+                if(correctFillCooldown == 1)
+                {
+                generateLevel();
+
+                }
+            }
+            if(correctFillCooldown > 0)
+            {
+                correctFillCooldown--;
+            }
         }
 
         public void gameplay()
         {
             startOfGameCode();
-
+            checkProgress();
 
             userControls();
 
@@ -645,12 +709,19 @@ namespace PatternRecognition
 
         public void userControls()
         {
-            for (int i = 49; i < 58; i++)
+            if (correctFillCooldown > 2)
+                return;
+
+            if (isDebugEnabled)
             {
-                if (kb.IsKeyDown((Keys)(i)))
+
+                for (int i = 49; i < 58; i++)
                 {
-                    patternChoice = i - 48;
-                    shouldCalcRedraw = true;
+                    if (kb.IsKeyDown((Keys)(i)))
+                    {
+                        patternChoice = i - 48;
+                        shouldCalcRedraw = true;
+                    }
                 }
             }
 
@@ -671,9 +742,9 @@ namespace PatternRecognition
                         {
                             if (selectedTool == tools.paintCan)
                             {
-                                for (int y2 = y - 1; y2 < y + 2; y2++)
+                                for (int y2 = Math.Max(y - 1, 0); y2 < Math.Min(y + 2, boardYDim); y2++)
                                 {
-                                    for (int x2 = x - 1; x2 < x + 2; x2++)
+                                    for (int x2 = Math.Max(x - 1, 0); x2 < Math.Min(x + 2, boardXDim); x2++)
                                     {
                                         if (board[y2, x2].isHighlighted && board[y2, x2].isUserHighlighted == false)
                                         {
@@ -686,14 +757,15 @@ namespace PatternRecognition
                                         }
                                     }
                                 }
-                                pointsToSpend -= (int)(6 * ((double)numChanged / 9));
-                                pointsToSpend += revealedCount;
+                                //pointsToSpend -= (int)(6 * ((double)numChanged / 9));
+                                pointsToSpend -= Math.Min(numChanged, 7);
+                                pointsToSpend += (int)Math.Ceiling((double)revealedCount / 2);
                                 y = boardYDim;
                                 x = boardXDim;
                             }
                             else if (selectedTool == tools.plus)
                             {
-                                for (int y2 = y - 1; y2 < y + 2; y2++)
+                                for (int y2 = Math.Max(y - 1, 0); y2 < Math.Min(y + 2, boardYDim); y2++)
                                 {
                                     if (board[y2, x].isHighlighted && board[y2, x].isUserHighlighted == false)
                                     {
@@ -706,7 +778,7 @@ namespace PatternRecognition
                                     }
                                 }
 
-                                for (int x2 = x - 1; x2 < x + 2; x2++)
+                                for (int x2 = Math.Max(x - 1, 0); x2 < Math.Min(x + 2, boardXDim); x2++)
                                 {
                                     if (board[y, x2].isHighlighted && board[y, x2].isUserHighlighted == false)
                                     {
@@ -720,8 +792,10 @@ namespace PatternRecognition
 
                                 }
 
-                                pointsToSpend -= (int)(4 * ((double)numChanged / 5));
-                                pointsToSpend += revealedCount;
+                                //pointsToSpend -= (int)(4 * ((double)numChanged / 5));
+                                //pointsToSpend += revealedCount;
+                                pointsToSpend -= Math.Min(numChanged, 4);
+                                pointsToSpend += (int)Math.Ceiling((double)revealedCount -1);
                                 y = boardYDim;
                                 x = boardXDim;
                             }
@@ -729,9 +803,9 @@ namespace PatternRecognition
                             {
 
                                 int firstPoint = ((y - 1) + (x - 1)) % 2;
-                                for (int y2 = y - 1; y2 < y + 2; y2++)
+                                for (int y2 = Math.Max(y - 1, 0); y2 < Math.Min(y + 2, boardYDim); y2++)
                                 {
-                                    for (int x2 = x - 1; x2 < x + 2; x2++)
+                                    for (int x2 = Math.Max(x - 1, 0); x2 < Math.Min(x + 2, boardXDim); x2++)
                                     {
                                         if ((y2 + x2) % 2 == firstPoint)
                                         {
@@ -748,8 +822,10 @@ namespace PatternRecognition
                                     }
                                 }
 
-                                pointsToSpend -= (int)(4 * ((double)numChanged / 5));
-                                pointsToSpend += revealedCount;
+                                //pointsToSpend -= (int)(4 * ((double)numChanged / 5));
+                                //pointsToSpend += revealedCount;
+                                pointsToSpend -= Math.Min(numChanged, 4);
+                                pointsToSpend += (int)Math.Ceiling((double)revealedCount -1);
                                 y = boardYDim;
                                 x = boardXDim;
                             }
@@ -764,7 +840,9 @@ namespace PatternRecognition
                                     board[y, x].isUserHighlighted = true;
                                     numChanged += 1;
                                 }
-                                pointsToSpend -= 1 * numChanged;
+                                //pointsToSpend -= 1 * numChanged;
+                                //pointsToSpend += revealedCount;
+                                pointsToSpend -= numChanged;
                                 pointsToSpend += revealedCount;
                                 y = boardYDim;
                                 x = boardXDim;
@@ -776,7 +854,38 @@ namespace PatternRecognition
                     }
                 }
             }
-            if(pointsToSpend <= 0)
+            numChanged = 0;
+            revealedCount = 0;
+
+            if (selectedTool == tools.single && mouse.LeftButton == ButtonState.Pressed)
+            {
+
+                for (int y = 0; y < boardYDim; y++)
+                {
+                    for (int x = 0; x < boardXDim; x++)
+                    {
+                        if (board[y, x].getRec().Contains(mousePos))
+                        {
+                            if (board[y, x].isHighlighted && board[y, x].isUserHighlighted == false)
+                            {
+                                revealedCount += 1;
+                            }
+                            if (board[y, x].isUserHighlighted == false)
+                            {
+                                board[y, x].isUserHighlighted = true;
+                                numChanged += 1;
+                            }
+
+                            pointsToSpend -= numChanged;
+                            //pointsToSpend += revealedCount;
+                            pointsToSpend += revealedCount;
+                        }
+                    }
+                }
+            }
+
+
+            if (pointsToSpend <= 0)
             {
                 state = gameState.lose;
             }
@@ -809,7 +918,22 @@ namespace PatternRecognition
 
             if (kb.IsKeyDown(Keys.E) && oldkb.IsKeyUp(Keys.E))
             {
+                if(kb.IsKeyDown(Keys.LeftShift))
+                {
+                    selectedTool -= 1;
+                    if((int)selectedTool == -1)
+                    {
+                        selectedTool = (tools)(Enum.GetNames(typeof(tools)).Length - 1);
+                    }
+                    //selectedTool = (tools)((int)Math.Abs(((int)selectedTool - 1)) % (Enum.GetNames(typeof(tools)).Length));
+
+                }
+                else
+                {
                 selectedTool = (tools)((int)(selectedTool + 1) % (Enum.GetNames(typeof(tools)).Length));
+
+                }
+
             }
 
             if (kb.IsKeyDown(Keys.R) && oldkb.IsKeyUp(Keys.R))
@@ -946,15 +1070,20 @@ namespace PatternRecognition
 
         public void drawGameplay()
         {
+            
+            foundCount = 0;
+            totalTreasureTiles = 0;
             for (int y = 0; y < boardYDim; y++)
             {
                 for (int x = 0; x < boardXDim; x++)
                 {
                     if (board[y, x].isHighlighted)
                     {
-                        if (board[y, x].isUserHighlighted)
+                        totalTreasureTiles += 1;
+                        if (board[y, x].isUserHighlighted || correctFillCooldown > 2)
                         {
                             board[y, x].drawCharacter(spriteBatch, Color.Cyan);
+                            foundCount += 1;
                         }
                         else
                         {
@@ -966,7 +1095,7 @@ namespace PatternRecognition
                     }
                     else
                     {
-                        if (board[y, x].isUserHighlighted)
+                        if (board[y, x].isUserHighlighted && correctFillCooldown == 0)
                         {
                             board[y, x].drawCharacter(spriteBatch, Color.Green);
                         }
@@ -1002,6 +1131,23 @@ namespace PatternRecognition
         public void drawLose()
         {
 
+            if (startButtonSelected)
+            {
+                playButton.drawCharacter(spriteBatch, Color.Red);
+
+            }
+            else
+            {
+                playButton.drawCharacter(spriteBatch);
+
+            }
+
+            spriteBatch.DrawString(titleFont, "You ran out of points",
+                        new Vector2(screenWidth / 2, 100) - titleFont.MeasureString("You ran out of points") / 2, Color.Black);
+
+            spriteBatch.DrawString(titleFont, "  Title \nScreen",
+                        new Vector2(screenWidth / 2, playButton.getRec().Bottom - (playButton.getRec().Height * 2 / 4))
+                        - titleFont.MeasureString(" Title \nScreen") / 2, Color.Black);
         }
 
         /// <summary>
